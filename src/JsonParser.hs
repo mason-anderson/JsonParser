@@ -33,7 +33,7 @@ instance Applicative Parser where
                 return (p2Str, f a)
 
 instance Alternative Parser where
-    empty = Parser $ \_ -> Nothing
+    empty = Parser $ const Nothing
     (<|>) (Parser f) (Parser g) = Parser $ \a -> f a <|> g a
 
 char :: Char -> Parser Char
@@ -45,13 +45,13 @@ char c = Parser p
             | otherwise = Nothing
 
 string :: String -> Parser String
-string = sequenceA . map char
+string = traverse char
 
 stringLiteral :: Parser String
 stringLiteral = char '"' *> (concat <$> many contents) <* char '"'
-    where contents =  ((const "\"") <$> string "\\\"")
-                  <|> ((const "\\") <$> string "\\\\")
-                  <|> ((whileTrue (\x -> x `notElem` ['\\','"'])))
+    where contents =  ("\"" <$ string "\\\"")
+                  <|> ("\\" <$ string "\\\\")
+                  <|> whileTrue (\x -> x `notElem` ['\\','"'])
 
 whileTrue :: (Char -> Bool) -> Parser String
 whileTrue f = Parser p
@@ -63,20 +63,20 @@ whileTrue f = Parser p
                 return (str', xs)
 
 spaces :: Parser String
-spaces = (whileTrue isSpace) <|> (pure "")
+spaces = whileTrue isSpace <|> pure ""
 
 sepBy :: Parser a -> Parser b -> Parser [b]
 sepBy sep element = (:) <$> element <*> many (sep *> element) <|> pure []
 
 jsonNull :: Parser JValue
-jsonNull = const JNull <$> string "null"
+jsonNull = JNull <$ string "null"
 
 jsonBool :: Parser JValue
-jsonBool =  ((const $ JBool True) <$> string "true")
-        <|> ((const $ JBool False) <$> string "false")
+jsonBool =  (JBool True <$ string "true")
+        <|> (JBool False <$ string "false")
 
 jsonNumber :: Parser JValue
-jsonNumber = (JNumber . read) <$> (whileTrue isDigit)
+jsonNumber = JNumber . read <$> whileTrue isDigit
 
 jsonString :: Parser JValue
 jsonString = JString <$> stringLiteral

@@ -1,7 +1,6 @@
 module Main where
 
 import System.Environment
-import Data.Maybe
 
 import JsonParser
 
@@ -16,7 +15,7 @@ main = do
     if length args /= 1 then
         putStrLn "needs one argument for filename"
     else do
-        let filename = args !! 0
+        let filename = head args
         json <- parseFile filename jsonValue
-        putStrLn $ fromMaybe "failed to parse" $ show <$> json
+        putStrLn $ maybe "failed to parse" show json
     return ()

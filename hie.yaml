@@ -1,0 +1,13 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "jsonParser:lib"
+
+    - path: "./app/Main.hs"
+      component: "jsonParser:exe:jsonParser"
+
+    - path: "./app/Paths_jsonParser.hs"
+      component: "jsonParser:exe:jsonParser"
+
+    - path: "./test"
+      component: "jsonParser:test:jsonParser-test"
